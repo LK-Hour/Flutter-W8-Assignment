@@ -9,8 +9,7 @@ class LibraryContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1- Read the globbal song repository
-    LibraryViewModel mv = context.watch<LibraryViewModel>();
+    LibraryViewModel vm = context.watch<LibraryViewModel>();
 
     return Padding(
       padding: const EdgeInsets.all(20.0),
@@ -20,21 +19,49 @@ class LibraryContent extends StatelessWidget {
           SizedBox(height: 16),
           Text("Library", style: AppTextStyles.heading),
           SizedBox(height: 50),
-      
-          Expanded(
-            child: ListView.builder(
-              itemCount: mv.songs.length,
-              itemBuilder: (context, index) => SongTile(
-                song: mv.songs[index],
-                isPlaying: mv.isSongPlaying(mv.songs[index]) ,
-                onTap: () {
-                  mv.start(mv.songs[index]);
-                },
-              ),
-            ),
-          ),
+          Expanded(child: _buildBody(vm)),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody(LibraryViewModel vm) {
+    // Show loading spinner
+    if (vm.isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    // Show error message
+    if (vm.hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Error: ${vm.errorMessage}', textAlign: TextAlign.center),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                vm.fetchSongs();
+              },
+              child: Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show list of songs
+    return ListView.builder(
+      itemCount: vm.songs.length,
+      itemBuilder: (context, index) {
+        return SongTile(
+          song: vm.songs[index],
+          isPlaying: vm.isSongPlaying(vm.songs[index]),
+          onTap: () {
+            vm.start(vm.songs[index]);
+          },
+        );
+      },
     );
   }
 }
